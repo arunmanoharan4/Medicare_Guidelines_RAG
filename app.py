@@ -1,9 +1,11 @@
 from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
 import gradio as gr
-import logging
+from transformers.utils import logging
 
-logging.basicConfig(filename='medicare_log.txt', level=logging.INFO, format='%(asctime)s -  %(levelname)s -  %(message)s')
+#logging.basicConfig(filename='medicare_log.txt', level=logging.INFO, format='%(asctime)s -  %(levelname)s -  %(message)s')
+logger = logging.get_logger("medicare_log")
+logger.setLevel(logging.INFO)
 
 class openai_wrapper:
     def __init__(self):
@@ -47,7 +49,7 @@ llm = openai_wrapper()
 limit = 6000
 
 def retrieve(query):
-    logging.debug(f"Query: {query}")
+    logger.debug(f"Query: {query}")
     xq = llm.get_embedding(query)
     # get relevant contexts
     res = vector_db.get_index().query(vector=xq, top_k=3, include_metadata=True, namespace='medicare-benefits')
@@ -120,11 +122,11 @@ with gr.Blocks() as demo:
     def get_answers(message, history):
         print("Inside get_answers ", message)
         prompt_with_context, context = retrieve(query=message)
-        logging.info(f"Prompt: {prompt_with_context}")
+        logger.info(f"Prompt: {prompt_with_context}")
         output = llm.get_completion(prompt_with_context)
         citations = output
         set_source_text(context) 
-        logging.info(f"Answer: {output}")
+        logger.info(f"Answer: {output}")
         return output
     
     def set_citations():
